@@ -1,30 +1,32 @@
-#include <iostream>
 #include <cpr/cpr.h>
 #include <arduino.h>
 
-using namespace cpr;
-using namespace std;
+using namespace cpr; 
 
-int main() {
-    
-    char link[] = "start C:\\Users\\Intel Core\\iot_intot\\квант\квант\\jsom.json";
+const char *ssid = "KVANTORIUM34IT349"; // SSID
+const char *password = "it349Impossible"; // пароль
+
+void setup() {
+Serial.begin(9600);
+
+}
+
+void loop(){
+    Post('text/plain');
+    Get();
+}
+
+
+void Post(char _file) {
+    char link[] = "file"; // ваш файл
     Response r = Post(Url{ "http://www.httpbin.org/post" },
         Body{ link },
-        Header{ {"Content-Type", "application/json"} });
-    cout << r.text << endl;
-
+        Header{ {"Content-Type", _file} });
 }
 
-void Display() {
-
+void Get(){
+    Response r = Get(Url{"http://www.httpbin.org/post"},
+                      Authentication{"user", "pass"},
+                      Parameters{{"anon", "true"}, {"key", "value"}});
+    return r.text;
 }
-void Button() {
-
-}
-void Beacon() {
-
-}
-void Led_1() {
-
-}
-
