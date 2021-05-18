@@ -7,74 +7,21 @@
 
 
 
-
-/*
- * HTTP Client GET Request
- * Copyright (c) 2018, circuits4you.com
- * All rights reserved.
- * https://circuits4you.com 
- * Connects to WiFi HotSpot. */
+const char *ssid = "TP-LINK_89AC"; 
+const char *password = "88673592"; 
+const char *host = "127.0.0.1:5000";  
 
 
-
-/* Set these to your desired credentials. */
-const char *ssid = "KVANTORIUM34IT349"; // SSID
-const char *password = "it349Impossible"; // пароль
-
-//Web/Server address to read/write from 
-const char *host = "192.168.43.128";   //https://circuits4you.com website or IP address of server
-
-//=======================================================================
-//                    Power on setup
-//=======================================================================
-
-void setup() {
-  delay(1000);
-  Serial.begin(115200);
-  WiFi.mode(WIFI_OFF);        //Prevents reconnection issue (taking too long to connect)
-  delay(1000);
-  WiFi.mode(WIFI_STA);        //This line hides the viewing of ESP as wifi hotspot
-  
-  WiFi.begin(ssid, password);     //Connect to your WiFi router
-  Serial.println("");
-
-  Serial.print("Connecting");
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  //If connection successful show IP address in serial monitor
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());  //IP address assigned to your ESP
-}
-
-//=======================================================================
-//                    Main Program Loop
-//=======================================================================
-void loop() {
-    Get();
-    Post('ABOBA');
-    
-}
-//=======================================================================
 void Get(){
-      HTTPClient http;    //Declare object of class HTTPClient
-
+  HTTPClient http; 
   String ADCData, station, getData, Link;
-  int adcvalue=analogRead(A0);  //Read Analog value of LDR
-  ADCData = String(adcvalue);   //String to interger conversion
+  int adcvalue=analogRead(A0); 
+  ADCData = String(adcvalue); 
   station = "B";
 
-  //GET Data
-  getData = "?status=" + ADCData + "&station=" + station ;  //Note "?" added at front
-  Link = "http://192.168.43.128/c4yforum/getdemo.php" + getData;
+
   
-  http.begin(Link);     //Specify request destination
+  http.begin("http://127.0.0.1:5000/data");
   
   int httpCode = http.GET();            //Send the request
   String payload = http.getString();    //Get the response payload
@@ -87,27 +34,52 @@ void Get(){
   delay(5000);  //GET Data at every 5 seconds
 }
 
-void Post(char _file) {
+void Post() {
     HTTPClient http; 
 
-  String ADCData, station, postData;
-  int adcvalue=analogRead(A0);  //Read Analog value of LDR
-  ADCData = String(adcvalue);   //String to interger conversion
-  station = "A";
-
+  String  ADCData, station, postData, dureni;
+ 
   //Post Data
-  postData = "status=" + ADCData + "&station=" + station ;
+  postData = "momonik" ;
   
-  http.begin("http://192.168.43.128/c4yforum/postdemo.php");              //Specify request destination
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");    //Specify content-type header
+  http.begin("http://127.0.0.1:5000/data");             
+  http.addHeader("Content-Type", "application/json");   
 
-  int httpCode = http.POST(postData);   //Send the request
-  String payload = http.getString();    //Get the response payload
+  int httpCode = http.POST(postData);   
+  String payload = http.getString();    
 
-  Serial.println(httpCode);   //Print HTTP return code
-  Serial.println(payload);    //Print request response payload
+  Serial.println(httpCode);   
+  Serial.println(payload);  
 
-  http.end();  //Close connection
+  http.end();  
+  delay(5000);  
+}
+
+
+void setup() {
+  delay(1000);
+  Serial.begin(9600);
+  WiFi.mode(WIFI_OFF);      
+  delay(1000);
+  WiFi.mode(WIFI_STA);        
   
-  delay(5000);  //Post Data at every 5 seconds
+  WiFi.begin(ssid, password);     
+  Serial.println("");
+
+  Serial.print("Connecting");
+ 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println(WiFi.status());
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP()); 
+}
+void loop() {
+  Get();
 }
