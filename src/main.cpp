@@ -1,98 +1,121 @@
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h> 
+#include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
-#include <LiquidCrystal.h>
 #include <ArduinoJson.h>
 #include <arduino.h>
+#include <LiquidCrystal.h>
+#include <string>
+#include <TroykaDHT.h>
 
-const char *ssid = "TP-LINK_89AC"; 
-const char *password = "88673592"; 
-const char *host = "192.168.0.106:5000";  
+#define DHTPIN 8
+#define led 6
+
+class DHT dht(DHTPIN, DHT11);
+LiquidCrystal lcd(D6, D7, D4, D3, D2, D1);
+
+const char* ssid = "Lexa";
+const char* password = "brawltop";
+const char* host = "192.168.29.174:5000";
+const char* GetURL = "http://192.168.29.174:5000/input_elements/state/";
+const char* PostURL = "http://192.168.29.174:5000/output_elements/state/";
+const char* DISPLAY_TEXT;
+const char* LED;
+ char* Json;
+int Humidity = 4;
+int Temperature = 2;
+int DHT,temp;
 String payload;
 
-LiquidCrystal lcd(11, 12, 5, 4, 3, 2);
 
-void LiquidCristal(){
-  lcd.begin(16, 2);
-  lcd.print("Hello world");
-}
-String Get(){
-  HTTPClient http; 
-  String ADCData, station;
-  int adcvalue=analogRead(A0); 
-  ADCData = String(adcvalue); 
-  station = "B";
-  
-  http.begin("http://127.0.0.1:5000/data");
-  
-  int httpCode = http.GET();
-  payload = http.getString();
-
-  Serial.println(httpCode);
-  Serial.println(payload);
-
-  http.end();
-  return payload;
-  
-}
-void Post() {
-  HTTPClient http; 
-
-  String postData;
-  postData = "momonik" ;
-  
-  http.begin("http://192.168.0.105:5000/");             
-  http.addHeader("Content-Type", "application/json");   
-
-  http.POST(postData);   
-
-  String payload = http.getString();    
-  Serial.println(payload);  
-
-  http.end();  
+void DHTCLONE(){
+    dht.read();
+    if (dht.getState() == DHT_OK){
+    Temperature = dht.getTemperatureC();
+    Humidity = dht.getHumidity();
+    }else 
+        Serial.print("DHT_ERROR");
 }
 void ReadJson(){
+StaticJsonDocument<200> doc;
+deserializeJson(doc, payload);
 
+DISPLAY_TEXT = doc["DISPLAY"];
+LED = doc["LED"];
+Serial.print(DISPLAY_TEXT);
+Serial.print(LED);
+}
+char* PostJson(int Temperature, int Humidity){
+    DynamicJsonDocument Qow(1024);
 
-  StaticJsonDocument<200> doc;
-  deserializeJson(doc, payload);
- 
-  const char *DISLAY = doc["sensor"];
+    Qow[DHT] = Temperature;
+    Qow[temp] = Humidity;
 
+    serializeJson(Qow, Json);
 
-  Serial.print(DISLAY);
+    return Json;
+}
+String Get(){
+HTTPClient http;
+String ADCData, station;
+int adcvalue=analogRead(A0);
+ADCData = String(adcvalue);
+station = "B";
+
+http.begin(GetURL);
+
+int httpCode = http.GET();
+payload = http.getString();
+
+//Serial.println(payload);
+
+http.end();
+return payload;
 
 }
+void Post(char* data) {
+HTTPClient http;
+
+String postData;
+postData = payload;
+
+http.begin(PostURL);
+http.addHeader("Content-Type", "application/json");
+
+http.POST(data);
+
+http.end();
+}
+void LCD_WRITE(const char* text) {
+lcd.clear();
+lcd.setCursor(1, 0);
+lcd.print(text);
+}
 void setup() {
-  Serial.begin(9600);
-  delay(1000);
-  
-  WiFi.mode(WIFI_OFF);      
-  delay(1000);
-  WiFi.mode(WIFI_STA);        
-  
-  WiFi.begin(ssid, password);     
-  Serial.println("");
+lcd.begin(16, 2);
+Serial.begin(9600);
+dht.begin();
+WiFi.mode(WIFI_OFF);
 
-  Serial.print("Connecting");
- 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
+WiFi.mode(WIFI_STA);
 
-  Serial.println(WiFi.status());
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+WiFi.begin(ssid, password);
+Serial.println("");
+
+Serial.print("Connecting");
+
+while (WiFi.status() != WL_CONNECTED) {
+delay(500);
+Serial.print(".");
+}
 }
 
 void loop() {
-  ReadJson();
- 
-
-  delay(5000);
+Get();
+ReadJson();
+LCD_WRITE(DISPLAY_TEXT);
+DHTCLONE();
+PostJson(Temperature,Humidity);
+Post(Json);
+delay(500);
 }
