@@ -7,7 +7,9 @@
 #include <LiquidCrystal.h>
 #include <string>
 #include <TroykaDHT.h>
-
+#define R 1
+#define G 2
+#define B 3
 #define DHTPIN 8
 #define led 6
 
@@ -21,13 +23,18 @@ const char* GetURL = "http://192.168.29.174:5000/input_elements/state/";
 const char* PostURL = "http://192.168.29.174:5000/output_elements/state/";
 const char* DISPLAY_TEXT;
 const char* LED;
- char* Json;
+char* Json;
+int RE,GR,BL;
 int Humidity = 4;
 int Temperature = 2;
 int DHT,temp;
 String payload;
 
-
+void LEDQWE(int RED, int GREN, int BLUE){
+    analogWrite(R, RED);
+    analogWrite(G, GREN);
+    analogWrite(B, BLUE);
+}
 void DHTCLONE(){
     dht.read();
     if (dht.getState() == DHT_OK){
@@ -42,8 +49,14 @@ deserializeJson(doc, payload);
 
 DISPLAY_TEXT = doc["DISPLAY"];
 LED = doc["LED"];
+RE = doc["R"];
+GR = doc["G"];
+BL = doc["B"];
 Serial.print(DISPLAY_TEXT);
 Serial.print(LED);
+Serial.print(RE);
+Serial.print(GR);
+Serial.print(BL);
 }
 char* PostJson(int Temperature, int Humidity){
     DynamicJsonDocument Qow(1024);
@@ -95,6 +108,9 @@ void setup() {
 lcd.begin(16, 2);
 Serial.begin(9600);
 dht.begin();
+pinMode(R,OUTPUT);
+pinMode(G,OUTPUT);
+pinMode(B,OUTPUT);
 WiFi.mode(WIFI_OFF);
 
 WiFi.mode(WIFI_STA);
@@ -114,6 +130,7 @@ void loop() {
 Get();
 ReadJson();
 LCD_WRITE(DISPLAY_TEXT);
+LEDQWE(RE,GR,BL);
 DHTCLONE();
 PostJson(Temperature,Humidity);
 Post(Json);
