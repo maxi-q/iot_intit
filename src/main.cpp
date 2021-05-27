@@ -7,11 +7,11 @@
 #include <LiquidCrystal.h>
 #include <string>
 #include <TroykaDHT.h>
-#define R 1
-#define G 2
-#define B 3
-#define DHTPIN 8
-#define led 6
+#define R 12 //SD3
+#define G 11 //SD2
+#define B 13 //SD1
+#define DHTPIN 9 //CM
+#define led 10 //SD0
 
 class DHT dht(DHTPIN, DHT11);
 LiquidCrystal lcd(D6, D7, D4, D3, D2, D1);
